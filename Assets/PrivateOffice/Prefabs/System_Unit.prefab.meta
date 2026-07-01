@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ede68c39637c0d543951703caac39066
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 115305
+  packageName: 'Private Office [Room]'
+  packageVersion: 1.1
+  assetPath: Assets/PrivateOffice/Prefabs/System_Unit.prefab
+  uploadId: 524117

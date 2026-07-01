@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 66fd81e540f8d7647b1dbb869f90da96
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 115305
+  packageName: 'Private Office [Room]'
+  packageVersion: 1.1
+  assetPath: Assets/PrivateOffice/Prefabs/Desk.prefab
+  uploadId: 524117

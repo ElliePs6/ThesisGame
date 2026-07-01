@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 9480cca1f42941944b65b8c96552032e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 115305
+  packageName: 'Private Office [Room]'
+  packageVersion: 1.1
+  assetPath: Assets/PrivateOffice/Scripts/ObjectRotation.cs
+  uploadId: 524117

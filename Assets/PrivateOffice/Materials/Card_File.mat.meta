@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b258f1fdad528dc4cb67aee87b46640d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 115305
+  packageName: 'Private Office [Room]'
+  packageVersion: 1.1
+  assetPath: Assets/PrivateOffice/Materials/Card_File.mat
+  uploadId: 524117

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ffe64c3bb059119419525d7c623b05c3
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 115305
+  packageName: 'Private Office [Room]'
+  packageVersion: 1.1
+  assetPath: Assets/PrivateOffice/Materials/Dinner_Table.mat
+  uploadId: 524117

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 548061788f089bd4ca8c2252427ff13d
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 115305
+  packageName: 'Private Office [Room]'
+  packageVersion: 1.1
+  assetPath: Assets/PrivateOffice/Scripts/TransitionToAnotherScene.cs
+  uploadId: 524117

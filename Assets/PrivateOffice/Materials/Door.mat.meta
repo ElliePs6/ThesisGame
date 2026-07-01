@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 11b81ccca55dad84597d05ec4d63258d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 115305
+  packageName: 'Private Office [Room]'
+  packageVersion: 1.1
+  assetPath: Assets/PrivateOffice/Materials/Door.mat
+  uploadId: 524117

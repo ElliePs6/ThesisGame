@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: e552be279db593e4980b34e80b64cbf8
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 115305
+  packageName: 'Private Office [Room]'
+  packageVersion: 1.1
+  assetPath: Assets/PrivateOffice/Prefabs/Modular_Room/Angle_Wall/Angle_Wall_Internal.prefab
+  uploadId: 524117

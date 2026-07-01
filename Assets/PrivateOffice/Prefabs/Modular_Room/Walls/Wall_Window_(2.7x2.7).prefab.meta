@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 431edd64f24b2ba498e371db1a53ff97
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 115305
+  packageName: 'Private Office [Room]'
+  packageVersion: 1.1
+  assetPath: Assets/PrivateOffice/Prefabs/Modular_Room/Walls/Wall_Window_(2.7x2.7).prefab
+  uploadId: 524117

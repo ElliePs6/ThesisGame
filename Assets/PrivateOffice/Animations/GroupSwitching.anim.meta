@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a8c8df1f2748b02409d9b03905a88550
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 115305
+  packageName: 'Private Office [Room]'
+  packageVersion: 1.1
+  assetPath: Assets/PrivateOffice/Animations/GroupSwitching.anim
+  uploadId: 524117

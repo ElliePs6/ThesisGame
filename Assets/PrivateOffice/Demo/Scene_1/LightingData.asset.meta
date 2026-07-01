@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 554f0af3b358a7c40a1398d4861b34a6
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 112000000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 115305
+  packageName: 'Private Office [Room]'
+  packageVersion: 1.1
+  assetPath: Assets/PrivateOffice/Demo/Scene_1/LightingData.asset
+  uploadId: 524117

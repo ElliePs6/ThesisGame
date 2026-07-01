@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a45ed963dd102fa43b37a35cd42b8b81
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 115305
+  packageName: 'Private Office [Room]'
+  packageVersion: 1.1
+  assetPath: Assets/PrivateOffice/Animations/Groups.controller
+  uploadId: 524117

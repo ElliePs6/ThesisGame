@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 46d04d626bf0e8e48a4dd9d684bca41f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 115305
+  packageName: 'Private Office [Room]'
+  packageVersion: 1.1
+  assetPath: Assets/PrivateOffice/Materials/Window_Glass.mat
+  uploadId: 524117

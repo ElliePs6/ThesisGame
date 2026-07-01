@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5b5af8d2fa862b34b8f537a86d793891
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 115305
+  packageName: 'Private Office [Room]'
+  packageVersion: 1.1
+  assetPath: Assets/PrivateOffice/Prefabs/Door.prefab
+  uploadId: 524117

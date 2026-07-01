@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d10c57b4d4038424c96c29de3e6d5900
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 115305
+  packageName: 'Private Office [Room]'
+  packageVersion: 1.1
+  assetPath: Assets/PrivateOffice/Materials/System_Unit.mat
+  uploadId: 524117
