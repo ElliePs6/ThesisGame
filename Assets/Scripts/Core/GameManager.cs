@@ -29,12 +29,15 @@ public class GameManager : MonoBehaviour
 {
     [Header("UI")]
     public TMP_Text phaseText;
-    public TMP_Text primaryNpcText;
-    public TMP_Text authorityText;
+    public GameObject authorityToastPanel;
+    public TMP_Text authorityMessageText;
+    public TMP_Text influenceChangeText;
     public TMP_Text feedbackText;
     public TMP_Text roundText;
     public TMP_Text influenceText;
-
+    public TextMeshProUGUI npcSpeechText;
+    [Header("NPC Animation")]
+    public NpcAnimationController npcAnimationController;
     [Header("AI Manager")]
     public AIManager aiManager;
     public AIMode currentAIMode = AIMode.Static;
@@ -70,6 +73,7 @@ public class GameManager : MonoBehaviour
     private int currentRoundIndex = 0;
     private GamePhase currentPhase = GamePhase.Presentation;
     private string currentAuthorityMessage;
+    private string currentInfluenceChangeMessage;
     private bool isProcessingAction = false;
     private string currentNpcMessage;
     private float roundStartTime;
@@ -621,11 +625,22 @@ public class GameManager : MonoBehaviour
             EndPrototype();
             return;
         }
-
+        if (authorityToastPanel != null)
+        {
+            authorityToastPanel.SetActive(false);
+        }
         currentPhase = GamePhase.Presentation;
-        currentAuthorityMessage = "Authority is waiting to evaluate.";
+        currentAuthorityMessage = "";
+        currentInfluenceChangeMessage = "";
         currentNpcMessage = $"Round {GetDisplayRoundNumber()}: {sessionRounds[currentRoundIndex].statement}";
-        feedbackText.text = "Choose an action.";
+        npcAnimationController?.PlayState(
+            sessionRounds[currentRoundIndex].npcState
+        );
+        if (feedbackText != null)
+        {
+            feedbackText.text = "Choose an action.";
+        }
+
         isProcessingAction = false;
         roundStartTime = Time.time;
 
@@ -706,10 +721,15 @@ public class GameManager : MonoBehaviour
             : GetInfluenceChange(selectedAction, isCorrectAction);
 
         int finalInfluenceChange = baseInfluenceChange;
-        string evaluationResponse;
+        string playerFeedback;
+        string aiEvaluationDetails;
 
         currentPhase = GamePhase.Action;
-        feedbackText.text = $"Player selected: {selectedAction}";
+        if (feedbackText != null)
+        {
+            feedbackText.text =
+    $"Player selected: {GetActionDisplayName(selectedAction)}";
+        }
         UpdateUI();
 
         gameLogger?.Log(
@@ -732,15 +752,30 @@ public class GameManager : MonoBehaviour
 
         currentNpcMessage = selectedOutcome != null
             ? selectedOutcome.npcResponse
-            : aiResult.responseText;
+            : "The NPC reacts to the selected action.";
+        if (selectedOutcome != null)
+        {
+            npcAnimationController?.PlayState(
+                selectedOutcome.nextNpcState
+            );
+        }
 
-        evaluationResponse = selectedOutcome != null
-            ? $"{selectedOutcome.quality}: {selectedOutcome.npcResponse}\n\n{aiResult.responseText}"
-            : aiResult.responseText;
+        playerFeedback = BuildPlayerFeedback(
+            selectedAction,
+            selectedOutcome,
+            isCorrectAction
+        );
+
+        // Κρατάμε τα τεχνικά AI details μόνο για logging / dataset.
+        aiEvaluationDetails = aiResult.responseText;
 
         finalInfluenceChange = aiResult.influenceChange;
 
-        feedbackText.text = evaluationResponse;
+        if (feedbackText != null)
+        {
+            feedbackText.text = playerFeedback;
+        }
+
         UpdateUI();
 
         gameLogger?.Log(
@@ -763,7 +798,18 @@ public class GameManager : MonoBehaviour
         influenceScore = Mathf.Clamp(influenceScore + finalInfluenceChange, 0, 100);
 
         currentPhase = GamePhase.Resolution;
-        currentAuthorityMessage = GetAuthorityFeedback(selectedAction, isCorrectAction, finalInfluenceChange);
+
+        currentAuthorityMessage = GetAuthorityMessage(
+            selectedOutcome,
+            isCorrectAction
+        );
+
+        currentInfluenceChangeMessage =
+            GetInfluenceChangeMessage(finalInfluenceChange);
+        if (authorityToastPanel != null)
+        {
+            authorityToastPanel.SetActive(true);
+        }
         UpdateUI();
 
         gameLogger?.Log(
@@ -786,7 +832,7 @@ public class GameManager : MonoBehaviour
             finalInfluenceChange - baseInfluenceChange,
             influenceScore,
             currentAuthorityMessage,
-            evaluationResponse,
+            aiEvaluationDetails,
             aiResult.matchedCaseId,
             aiResult.matchScore,
             aiResult.adaptiveReason,
@@ -799,7 +845,10 @@ public class GameManager : MonoBehaviour
         );
 
         yield return new WaitForSeconds(resolutionPhaseDuration);
-
+        if (authorityToastPanel != null)
+        {
+            authorityToastPanel.SetActive(false);
+        }
         currentRoundIndex++;
         StartRound();
     }
@@ -838,25 +887,140 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private string GetAuthorityFeedback(PlayerActionType selectedAction, bool isCorrectAction, int influenceChange)
+    private string BuildPlayerFeedback(
+        PlayerActionType selectedAction,
+        ActionOutcome selectedOutcome,
+        bool isCorrectAction)
     {
-        if (isCorrectAction)
+        string actionName = GetActionDisplayName(selectedAction);
+
+        if (selectedOutcome == null)
         {
-            return $"Authority: {selectedAction} matched the needs of the round. Influence increased by {influenceChange}.";
+            return isCorrectAction
+                ? $"{actionName} was appropriate for this situation."
+                : $"{actionName} did not match the needs of this situation.";
         }
 
-        return $"Authority: {selectedAction} did not fit the needs of the round. Influence changed by {influenceChange}.";
+        switch (selectedOutcome.quality)
+        {
+            case ActionOutcomeQuality.Best:
+                return $"{actionName} was the strongest choice for this situation.";
+
+            case ActionOutcomeQuality.Acceptable:
+                return $"{actionName} was a reasonable choice, but another approach could have addressed the situation more directly.";
+
+            case ActionOutcomeQuality.Bad:
+                return $"{actionName} did not fit the situation well and reduced the effectiveness of the interaction.";
+
+            case ActionOutcomeQuality.VeryBad:
+                return $"{actionName} worked against the needs of the situation and made the interaction more difficult.";
+
+            default:
+                return isCorrectAction
+                    ? $"{actionName} matched the needs of the situation."
+                    : $"{actionName} did not match the needs of the situation.";
+        }
+    }
+
+    private string GetActionDisplayName(PlayerActionType action)
+    {
+        switch (action)
+        {
+            case PlayerActionType.Probe:
+                return "Clarify";
+
+            case PlayerActionType.Challenge:
+                return "Confront";
+
+            case PlayerActionType.Support:
+                return "Stabilize";
+
+            case PlayerActionType.Commit:
+                return "Push Forward";
+
+            default:
+                return action.ToString();
+        }
+    }
+    private string GetAuthorityMessage(
+        ActionOutcome selectedOutcome,
+        bool isCorrectAction)
+    {
+        if (selectedOutcome == null)
+        {
+            return isCorrectAction
+                ? "Correct choice"
+                : "Incorrect choice";
+        }
+
+        switch (selectedOutcome.quality)
+        {
+            case ActionOutcomeQuality.Best:
+                return "Correct choice";
+
+            case ActionOutcomeQuality.Acceptable:
+                return "Acceptable choice";
+
+            case ActionOutcomeQuality.Bad:
+                return "Poor choice";
+
+            case ActionOutcomeQuality.VeryBad:
+                return "Critical mistake";
+
+            default:
+                return isCorrectAction
+                    ? "Correct choice"
+                    : "Incorrect choice";
+        }
+    }
+
+    private string GetInfluenceChangeMessage(int influenceChange)
+    {
+        string formattedChange = influenceChange >= 0
+            ? $"+{influenceChange}"
+            : influenceChange.ToString();
+
+        return $"Influence {formattedChange}";
     }
 
     private void EndPrototype()
     {
         currentPhase = GamePhase.Resolution;
 
-        primaryNpcText.text = "Prototype complete. All rounds finished.";
-        authorityText.text = $"Authority final evaluation: Influence ended at {influenceScore}.";
-        feedbackText.text = "Loading results...";
-        roundText.text = $"Round: {sessionRounds.Length}/{sessionRounds.Length}";
-        influenceText.text = $"Influence: {influenceScore}";
+        string finalNpcMessage = "Prototype complete. All rounds finished.";
+        if (authorityToastPanel != null)
+        {
+            authorityToastPanel.SetActive(true);
+        }
+        if (npcSpeechText != null)
+            npcSpeechText.text = finalNpcMessage;
+
+        if (authorityMessageText != null)
+        {
+            authorityMessageText.text = "Session complete";
+        }
+
+        if (influenceChangeText != null)
+        {
+            influenceChangeText.text =
+                $"Final Influence: {influenceScore}";
+        }
+
+        if (feedbackText != null)
+        {
+            feedbackText.text = "Loading results...";
+        }
+
+        if (roundText != null)
+        {
+            roundText.text =
+                $"Round: {sessionRounds.Length}/{sessionRounds.Length}";
+        }
+
+        if (influenceText != null)
+        {
+            influenceText.text = $"Influence: {influenceScore}";
+        }
 
         gameLogger?.Log($"END PROTOTYPE | Final Influence: {influenceScore}");
 
@@ -909,21 +1073,30 @@ public class GameManager : MonoBehaviour
 
     private void UpdateUI()
     {
-        phaseText.text = $"Phase: {currentPhase} | Mode: {currentAIMode}";
-
-        if (primaryNpcText != null)
+        if (phaseText != null)
         {
-            primaryNpcText.text = currentNpcMessage;
+            phaseText.text = $"Phase: {currentPhase} | Mode: {currentAIMode}";
         }
 
-        if (authorityText != null)
+        if (npcSpeechText != null)
         {
-            authorityText.text = currentAuthorityMessage;
+            npcSpeechText.text = currentNpcMessage;
+        }
+
+        if (authorityMessageText != null)
+        {
+            authorityMessageText.text = currentAuthorityMessage;
+        }
+
+        if (influenceChangeText != null)
+        {
+            influenceChangeText.text = currentInfluenceChangeMessage;
         }
 
         if (roundText != null)
         {
-            roundText.text = $"Round: {GetDisplayRoundNumber()}";
+            roundText.text =
+                $"Round: {GetDisplayRoundNumber()}/{sessionRounds.Length}";
         }
 
         if (influenceText != null)
