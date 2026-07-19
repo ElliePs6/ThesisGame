@@ -1088,10 +1088,10 @@ public class GameManager : MonoBehaviour
             authorityMessageText.text = currentAuthorityMessage;
         }
 
-        if (influenceChangeText != null)
-        {
-            influenceChangeText.text = currentInfluenceChangeMessage;
-        }
+        // if (influenceChangeText != null)
+        // {
+        //     influenceChangeText.text = currentInfluenceChangeMessage;
+        // }
 
         if (roundText != null)
         {

@@ -1,10 +1,11 @@
+using System.IO;
 using TMPro;
 using UnityEngine;
 
 public class ResultsUI : MonoBehaviour
 {
     [Header("UI")]
-    public TMP_Text resultsText;
+    [SerializeField] private TMP_Text resultsText;
 
     private void Start()
     {
@@ -15,65 +16,90 @@ public class ResultsUI : MonoBehaviour
     {
         if (resultsText == null)
         {
-            Debug.LogError("ResultsUI: resultsText is not assigned in the Inspector.");
+            Debug.LogError(
+                "ResultsUI: resultsText is not assigned in the Inspector.",
+                this
+            );
+
             return;
         }
 
         if (GameFlowManager.Instance == null)
         {
-            resultsText.text = "No session results found.\n\nPlay a session first to view results.";
+            resultsText.text =
+                "No session results found.\n\n" +
+                "Play a session first to view results.";
+
             return;
         }
 
-        string modeLabel = GameFlowManager.Instance.SelectedMode == AIMode.Adaptive
-            ? "Adaptive CBR AI"
-            : "Static Rule-Based AI";
-
-        int totalActions = GameFlowManager.Instance.CorrectActions + GameFlowManager.Instance.WrongActions;
+        int correctActions = GameFlowManager.Instance.CorrectActions;
+        int wrongActions = GameFlowManager.Instance.WrongActions;
+        int totalActions = correctActions + wrongActions;
 
         if (totalActions == 0)
         {
             resultsText.text =
                 "No completed session found.\n\n" +
                 "Play a session first to view results.";
+
             return;
         }
 
+        string modeLabel =
+            GameFlowManager.Instance.SelectedMode == AIMode.Adaptive
+                ? "Adaptive CBR AI"
+                : "Static Rule-Based AI";
+
+        string exportFolder = GetExportFolder();
+
         resultsText.text =
-            "Current Session Results\n\n" +
+            "<b>Session Results</b>\n\n" +
 
-            $"Selected AI Mode: {modeLabel}\n" +
-            $"Final Influence Score: {GameFlowManager.Instance.FinalInfluence} / 100\n\n" +
+            $"AI Mode: {modeLabel}\n" +
+            $"Final Influence: {GameFlowManager.Instance.FinalInfluence}/100\n\n" +
 
-            "Performance Metrics\n" +
-            $"Correct Actions: {GameFlowManager.Instance.CorrectActions} / {totalActions}\n" +
-            $"Wrong Actions: {GameFlowManager.Instance.WrongActions} / {totalActions}\n" +
-            $"Success Rate: {GameFlowManager.Instance.SuccessRate:P0}\n\n" +
+            "<b>Performance</b>\n" +
+            $"Correct Actions: {correctActions}/{totalActions}\n" +
+            $"Success Rate: {GameFlowManager.Instance.SuccessRate:P0}\n" +
+            $"Average Reaction: {GameFlowManager.Instance.AverageReactionTime:F1}s\n\n" +
 
-            "Behaviour Metrics\n" +
-            $"Average Reaction Time: {GameFlowManager.Instance.AverageReactionTime:F2}s\n" +
-            $"Risk Success Rate: {GameFlowManager.Instance.RiskSuccessRate:F2}\n" +
-            $"Action Variety Score: {GameFlowManager.Instance.ActionVarietyScore:F2}\n" +
-            $"Commit Count: {GameFlowManager.Instance.CommitCount}" +
-            "Dataset Export\n" +
-            $"CSV Path: {GameFlowManager.Instance.LastDatasetPath}" +
-            "Dataset Export\n" +
-            $"Round Dataset CSV: {GameFlowManager.Instance.LastDatasetPath}\n" +
-            $"Session Summary CSV: {GameFlowManager.Instance.LastSummaryPath}";
+            "<b>Behaviour</b>\n" +
+            $"Action Variety: {GameFlowManager.Instance.ActionVarietyScore:F2}\n" +
+            $"Commit Actions: {GameFlowManager.Instance.CommitCount}\n\n" +
+
+            "<b>Export Files Location</b>\n" +
+            exportFolder;
+    }
+
+    private string GetExportFolder()
+    {
+        string datasetPath = GameFlowManager.Instance.LastDatasetPath;
+        string summaryPath = GameFlowManager.Instance.LastSummaryPath;
+
+        string sourcePath = !string.IsNullOrWhiteSpace(datasetPath)
+            ? datasetPath
+            : summaryPath;
+
+        if (string.IsNullOrWhiteSpace(sourcePath))
+        {
+            return "Export folder unavailable.";
+        }
+
+        string exportFolder = Path.GetDirectoryName(sourcePath);
+
+        return string.IsNullOrWhiteSpace(exportFolder)
+            ? "Export folder unavailable."
+            : exportFolder;
     }
 
     public void OnBackClicked()
     {
-        if (GameFlowManager.Instance != null)
-        {
-            GameFlowManager.Instance.GoToMainMenu();
-        }
+        GameFlowManager.Instance?.GoToMainMenu();
     }
+
     public void OnPlayAgainClicked()
     {
-        if (GameFlowManager.Instance != null)
-        {
-            GameFlowManager.Instance.GoToModeSelection();
-        }
+        GameFlowManager.Instance?.GoToModeSelection();
     }
 }
