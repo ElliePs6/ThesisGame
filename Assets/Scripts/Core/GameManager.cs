@@ -77,9 +77,20 @@ public class GameManager : MonoBehaviour
     private bool isProcessingAction = false;
     private string currentNpcMessage;
     private float roundStartTime;
+    private AuthorityToastUI authorityToastUI;
 
     private void Start()
     {
+        if (authorityToastPanel != null)
+        {
+            authorityToastUI = authorityToastPanel.GetComponent<AuthorityToastUI>();
+
+            if (authorityToastUI == null)
+            {
+                Debug.LogWarning("GameManager: authorityToastPanel has no AuthorityToastUI component.");
+            }
+        }
+
         if (GameFlowManager.Instance != null)
         {
             currentAIMode = GameFlowManager.Instance.SelectedMode;
@@ -625,10 +636,8 @@ public class GameManager : MonoBehaviour
             EndPrototype();
             return;
         }
-        if (authorityToastPanel != null)
-        {
-            authorityToastPanel.SetActive(false);
-        }
+
+        authorityToastUI?.Hide();
         currentPhase = GamePhase.Presentation;
         currentAuthorityMessage = "";
         currentInfluenceChangeMessage = "";
@@ -806,10 +815,12 @@ public class GameManager : MonoBehaviour
 
         currentInfluenceChangeMessage =
             GetInfluenceChangeMessage(finalInfluenceChange);
-        if (authorityToastPanel != null)
-        {
-            authorityToastPanel.SetActive(true);
-        }
+
+        ActionOutcomeQuality resolvedQuality = selectedOutcome != null
+            ? selectedOutcome.quality
+            : (isCorrectAction ? ActionOutcomeQuality.Best : ActionOutcomeQuality.Bad);
+
+        authorityToastUI?.Show(resolvedQuality, currentAuthorityMessage, finalInfluenceChange);
         UpdateUI();
 
         gameLogger?.Log(
@@ -845,10 +856,7 @@ public class GameManager : MonoBehaviour
         );
 
         yield return new WaitForSeconds(resolutionPhaseDuration);
-        if (authorityToastPanel != null)
-        {
-            authorityToastPanel.SetActive(false);
-        }
+        authorityToastUI?.Hide();
         currentRoundIndex++;
         StartRound();
     }
@@ -1082,16 +1090,6 @@ public class GameManager : MonoBehaviour
         {
             npcSpeechText.text = currentNpcMessage;
         }
-
-        if (authorityMessageText != null)
-        {
-            authorityMessageText.text = currentAuthorityMessage;
-        }
-
-        // if (influenceChangeText != null)
-        // {
-        //     influenceChangeText.text = currentInfluenceChangeMessage;
-        // }
 
         if (roundText != null)
         {
