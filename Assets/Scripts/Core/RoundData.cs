@@ -34,6 +34,18 @@ public enum RoundPosition
     Any
 }
 
+/// <summary>
+/// Καθορίζει σε ποιο από τα δύο ισοδύναμα υποσύνολα rounds (Α/Β) ανήκει
+/// κάθε round -- χρησιμοποιείται για το counterbalanced within-subjects
+/// σχέδιο μελέτης (κάθε participant παίζει κάθε AI mode με διαφορετικό
+/// υποσύνολο rounds, ώστε να μην ξαναδεί τις ίδιες σωστές απαντήσεις).
+/// </summary>
+public enum RoundSubsetGroup
+{
+    A,
+    B
+}
+
 [Serializable]
 public class RoundData
 {
@@ -48,6 +60,10 @@ public class RoundData
     public DifficultyLevel difficulty = DifficultyLevel.Easy;
     public CommitTiming commitTiming = CommitTiming.None;
     public RoundPosition roundPosition = RoundPosition.Any;
+
+    [Header("Study Design")]
+    [Tooltip("Σε ποιο υποσύνολο (Α/Β) ανήκει αυτό το round, για το counterbalanced within-subjects design.")]
+    public RoundSubsetGroup subsetGroup = RoundSubsetGroup.A;
 
     [Header("NPC / Context")]
     public string npcState;

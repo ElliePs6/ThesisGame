@@ -51,7 +51,13 @@ public class GameManager : MonoBehaviour
 
     [Header("Timing")]
     public float actionPhaseDuration = 1.0f;
-    public float evaluationPhaseDuration = 1.2f;
+    // Πόσο μένει ορατό το feedbackText (π.χ. "Καλή επιλογή...") πριν αλλάξει
+    // η ατάκα του NPC. Ζητήθηκε να διαρκεί 6 δευτερόλεπτα ώστε ο παίκτης να
+    // προλαβαίνει να το διαβάσει άνετα.
+    public float feedbackToNpcSpeechDelay = 6.0f;
+    // Πόσο μένει ορατή η ατάκα του NPC (currentNpcMessage) πριν προχωρήσει
+    // η ροή στο authority feedback / resolution. Επίσης 6 δευτερόλεπτα.
+    public float evaluationPhaseDuration = 6.0f;
     public float resolutionPhaseDuration = 1.5f;
 
     [Header("Tracking")]
@@ -112,487 +118,7 @@ public class GameManager : MonoBehaviour
         if (HasValidRounds(roundPool))
             return;
 
-        roundPool = new RoundData[10];
-
-        roundPool[0] = new RoundData
-        {
-            scenarioId = "ROUND-001",
-            statement = "The NPC avoids giving clear details and keeps the response short.",
-            caseType = CaseType.InformationGap,
-            difficulty = DifficultyLevel.Easy,
-            commitTiming = CommitTiming.Early,
-            roundPosition = RoundPosition.Opening,
-            npcState = "avoidance",
-            contextTags = new[] { "unclear-details", "low-pressure", "information-gap" },
-            preferredAction = PlayerActionType.Probe,
-            outcomes = new[]
-            {
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Probe,
-                    quality = ActionOutcomeQuality.Best,
-                    npcResponse = "The NPC provides a useful detail, but still remains cautious.",
-                    nextNpcState = "defensive",
-                    influenceChange = 4
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Support,
-                    quality = ActionOutcomeQuality.Acceptable,
-                    npcResponse = "The NPC becomes slightly more cooperative, but the main information gap remains.",
-                    nextNpcState = "avoidance",
-                    influenceChange = 2
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Challenge,
-                    quality = ActionOutcomeQuality.Bad,
-                    npcResponse = "The NPC resists the pressure and becomes less cooperative.",
-                    nextNpcState = "defensive",
-                    influenceChange = -2
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Commit,
-                    quality = ActionOutcomeQuality.VeryBad,
-                    npcResponse = "The player pushes forward too early, causing the interaction to lose flexibility.",
-                    nextNpcState = "escalated",
-                    influenceChange = -3
-                }
-            }
-        };
-
-        roundPool[1] = new RoundData
-        {
-            scenarioId = "ROUND-002",
-            statement = "The NPC becomes tense and defensive during the interaction.",
-            caseType = CaseType.Defensive,
-            difficulty = DifficultyLevel.Medium,
-            commitTiming = CommitTiming.Early,
-            roundPosition = RoundPosition.Development,
-            npcState = "defensive",
-            contextTags = new[] { "tension", "resistance", "stability" },
-            preferredAction = PlayerActionType.Support,
-            outcomes = new[]
-            {
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Support,
-                    quality = ActionOutcomeQuality.Best,
-                    npcResponse = "The NPC becomes more stable and shows a small increase in cooperation.",
-                    nextNpcState = "avoidance",
-                    influenceChange = 4
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Probe,
-                    quality = ActionOutcomeQuality.Acceptable,
-                    npcResponse = "The NPC gives a limited answer, but the defensive tone remains.",
-                    nextNpcState = "defensive",
-                    influenceChange = 1
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Challenge,
-                    quality = ActionOutcomeQuality.Bad,
-                    npcResponse = "The NPC interprets the pressure negatively and becomes more resistant.",
-                    nextNpcState = "escalated",
-                    influenceChange = -2
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Commit,
-                    quality = ActionOutcomeQuality.VeryBad,
-                    npcResponse = "The player pushes forward before stability is restored, increasing resistance.",
-                    nextNpcState = "escalated",
-                    influenceChange = -3
-                }
-            }
-        };
-
-        roundPool[2] = new RoundData
-        {
-            scenarioId = "ROUND-003",
-            statement = "The NPC gives information that conflicts with an earlier statement.",
-            caseType = CaseType.Contradiction,
-            difficulty = DifficultyLevel.Medium,
-            commitTiming = CommitTiming.Middle,
-            roundPosition = RoundPosition.Development,
-            npcState = "inconsistent",
-            contextTags = new[] { "contradiction", "evidence", "clarification" },
-            preferredAction = PlayerActionType.Challenge,
-            outcomes = new[]
-            {
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Challenge,
-                    quality = ActionOutcomeQuality.Best,
-                    npcResponse = "The inconsistency is addressed directly and the NPC is forced to clarify the conflict.",
-                    nextNpcState = "defensive",
-                    influenceChange = 5
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Probe,
-                    quality = ActionOutcomeQuality.Acceptable,
-                    npcResponse = "The NPC gives more information, but the contradiction is not fully resolved.",
-                    nextNpcState = "inconsistent",
-                    influenceChange = 2
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Support,
-                    quality = ActionOutcomeQuality.Bad,
-                    npcResponse = "The NPC remains cooperative, but the key inconsistency is left unchallenged.",
-                    nextNpcState = "inconsistent",
-                    influenceChange = -1
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Commit,
-                    quality = ActionOutcomeQuality.VeryBad,
-                    npcResponse = "The player pushes forward before resolving the contradiction, weakening the decision path.",
-                    nextNpcState = "defensive",
-                    influenceChange = -3
-                }
-            }
-        };
-
-        roundPool[3] = new RoundData
-        {
-            scenarioId = "ROUND-004",
-            statement = "The NPC appears overwhelmed and the interaction becomes unstable.",
-            caseType = CaseType.Escalated,
-            difficulty = DifficultyLevel.Hard,
-            commitTiming = CommitTiming.Middle,
-            roundPosition = RoundPosition.Development,
-            npcState = "escalated",
-            contextTags = new[] { "instability", "pressure", "stability" },
-            preferredAction = PlayerActionType.Support,
-            outcomes = new[]
-            {
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Support,
-                    quality = ActionOutcomeQuality.Best,
-                    npcResponse = "The interaction stabilizes and the NPC becomes able to continue.",
-                    nextNpcState = "defensive",
-                    influenceChange = 4
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Probe,
-                    quality = ActionOutcomeQuality.Bad,
-                    npcResponse = "The additional questioning increases the strain and produces little useful information.",
-                    nextNpcState = "escalated",
-                    influenceChange = -1
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Challenge,
-                    quality = ActionOutcomeQuality.VeryBad,
-                    npcResponse = "The pressure escalates the situation further and cooperation drops sharply.",
-                    nextNpcState = "escalated",
-                    influenceChange = -3
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Commit,
-                    quality = ActionOutcomeQuality.Bad,
-                    npcResponse = "The player pushes forward before the situation is stable.",
-                    nextNpcState = "defensive",
-                    influenceChange = -2
-                }
-            }
-        };
-
-        roundPool[4] = new RoundData
-        {
-            scenarioId = "ROUND-005",
-            statement = "The NPC gives a vague answer that seems to hide an important detail.",
-            caseType = CaseType.HiddenDetail,
-            difficulty = DifficultyLevel.Medium,
-            commitTiming = CommitTiming.Early,
-            roundPosition = RoundPosition.Development,
-            npcState = "avoidance",
-            contextTags = new[] { "unclear-details", "information-gap", "hidden-detail" },
-            preferredAction = PlayerActionType.Probe,
-            outcomes = new[]
-            {
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Probe,
-                    quality = ActionOutcomeQuality.Best,
-                    npcResponse = "The NPC reveals a more specific detail and the situation becomes clearer.",
-                    nextNpcState = "defensive",
-                    influenceChange = 4
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Support,
-                    quality = ActionOutcomeQuality.Acceptable,
-                    npcResponse = "The NPC stays cooperative, but the hidden detail remains unclear.",
-                    nextNpcState = "avoidance",
-                    influenceChange = 2
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Challenge,
-                    quality = ActionOutcomeQuality.Bad,
-                    npcResponse = "The NPC becomes guarded before the missing detail is properly explored.",
-                    nextNpcState = "defensive",
-                    influenceChange = -2
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Commit,
-                    quality = ActionOutcomeQuality.VeryBad,
-                    npcResponse = "The player pushes forward while a key detail is still missing.",
-                    nextNpcState = "escalated",
-                    influenceChange = -3
-                }
-            }
-        };
-
-        roundPool[5] = new RoundData
-        {
-            scenarioId = "ROUND-006",
-            statement = "The NPC reaches a clear decision point and the interaction needs forward movement.",
-            caseType = CaseType.DecisionPoint,
-            difficulty = DifficultyLevel.Medium,
-            commitTiming = CommitTiming.Late,
-            roundPosition = RoundPosition.Closing,
-            npcState = "firm",
-            contextTags = new[] { "decision-point", "commitment", "high-clarity" },
-            preferredAction = PlayerActionType.Commit,
-            outcomes = new[]
-            {
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Commit,
-                    quality = ActionOutcomeQuality.Best,
-                    npcResponse = "The player pushes forward at the right moment and the interaction moves toward a clear outcome.",
-                    nextNpcState = "resolved",
-                    influenceChange = 6
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Probe,
-                    quality = ActionOutcomeQuality.Bad,
-                    npcResponse = "The player asks for more information even though the situation is already clear.",
-                    nextNpcState = "firm",
-                    influenceChange = -1
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Support,
-                    quality = ActionOutcomeQuality.Acceptable,
-                    npcResponse = "The NPC remains stable, but the interaction still needs forward movement.",
-                    nextNpcState = "firm",
-                    influenceChange = 1
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Challenge,
-                    quality = ActionOutcomeQuality.Bad,
-                    npcResponse = "The player creates unnecessary friction at the decision point.",
-                    nextNpcState = "defensive",
-                    influenceChange = -2
-                }
-            }
-        };
-
-        roundPool[6] = new RoundData
-        {
-            scenarioId = "ROUND-007",
-            statement = "The NPC gives a cooperative answer, but one important detail still seems missing.",
-            caseType = CaseType.HiddenDetail,
-            difficulty = DifficultyLevel.Medium,
-            commitTiming = CommitTiming.Middle,
-            roundPosition = RoundPosition.Development,
-            npcState = "cooperative-but-incomplete",
-            contextTags = new[] { "partial-cooperation", "hidden-detail", "clarification" },
-            preferredAction = PlayerActionType.Probe,
-            outcomes = new[]
-            {
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Probe,
-                    quality = ActionOutcomeQuality.Best,
-                    npcResponse = "The NPC adds the missing detail and the situation becomes much clearer.",
-                    nextNpcState = "cooperative",
-                    influenceChange = 4
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Support,
-                    quality = ActionOutcomeQuality.Acceptable,
-                    npcResponse = "The NPC feels understood, but the missing detail is still not fully explored.",
-                    nextNpcState = "cooperative-but-incomplete",
-                    influenceChange = 2
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Challenge,
-                    quality = ActionOutcomeQuality.Bad,
-                    npcResponse = "The NPC becomes confused by the sudden pressure and gives a less useful answer.",
-                    nextNpcState = "defensive",
-                    influenceChange = -1
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Commit,
-                    quality = ActionOutcomeQuality.Acceptable,
-                    npcResponse = "The player moves forward with some risk. The interaction continues, but the missing detail may still matter later.",
-                    nextNpcState = "uncertain",
-                    influenceChange = 1
-                }
-            }
-        };
-
-        roundPool[7] = new RoundData
-        {
-            scenarioId = "ROUND-008",
-            statement = "The NPC repeats a claim that sounds confident, but the available information is still uncertain.",
-            caseType = CaseType.DecisionPoint,
-            difficulty = DifficultyLevel.Hard,
-            commitTiming = CommitTiming.Early,
-            roundPosition = RoundPosition.Development,
-            npcState = "confident-but-uncertain",
-            contextTags = new[] { "premature-decision", "risk", "uncertainty" },
-            preferredAction = PlayerActionType.Probe,
-            outcomes = new[]
-            {
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Probe,
-                    quality = ActionOutcomeQuality.Best,
-                    npcResponse = "The NPC slows down and provides additional context before any decision is made.",
-                    nextNpcState = "reflective",
-                    influenceChange = 4
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Support,
-                    quality = ActionOutcomeQuality.Acceptable,
-                    npcResponse = "The NPC remains calm, but the uncertainty behind the claim is not fully examined.",
-                    nextNpcState = "confident-but-uncertain",
-                    influenceChange = 1
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Challenge,
-                    quality = ActionOutcomeQuality.Acceptable,
-                    npcResponse = "The NPC is pushed to defend the claim, which reveals some useful information but adds tension.",
-                    nextNpcState = "defensive",
-                    influenceChange = 1
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Commit,
-                    quality = ActionOutcomeQuality.VeryBad,
-                    npcResponse = "The player commits too early based on uncertain information, creating a weak decision.",
-                    nextNpcState = "escalated",
-                    influenceChange = -4
-                }
-            }
-        };
-
-        roundPool[8] = new RoundData
-        {
-            scenarioId = "ROUND-009",
-            statement = "The NPC reacts strongly after feeling misunderstood and the interaction begins to escalate.",
-            caseType = CaseType.Escalated,
-            difficulty = DifficultyLevel.Hard,
-            commitTiming = CommitTiming.Middle,
-            roundPosition = RoundPosition.Development,
-            npcState = "angry",
-            contextTags = new[] { "escalation", "misunderstanding", "emotional-intensity" },
-            preferredAction = PlayerActionType.Support,
-            outcomes = new[]
-            {
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Support,
-                    quality = ActionOutcomeQuality.Best,
-                    npcResponse = "The NPC feels acknowledged and the emotional intensity begins to drop.",
-                    nextNpcState = "defensive",
-                    influenceChange = 5
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Probe,
-                    quality = ActionOutcomeQuality.Bad,
-                    npcResponse = "The NPC experiences the question as pressure and becomes less willing to continue.",
-                    nextNpcState = "escalated",
-                    influenceChange = -2
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Challenge,
-                    quality = ActionOutcomeQuality.VeryBad,
-                    npcResponse = "The NPC becomes more upset and the interaction loses cooperation.",
-                    nextNpcState = "escalated",
-                    influenceChange = -4
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Commit,
-                    quality = ActionOutcomeQuality.Bad,
-                    npcResponse = "The player tries to force progress while the NPC is still emotionally escalated.",
-                    nextNpcState = "resistant",
-                    influenceChange = -3
-                }
-            }
-        };
-
-        roundPool[9] = new RoundData
-        {
-            scenarioId = "ROUND-010",
-            statement = "The NPC has clarified the main issue and is ready for a concrete next step.",
-            caseType = CaseType.DecisionPoint,
-            difficulty = DifficultyLevel.Medium,
-            commitTiming = CommitTiming.Late,
-            roundPosition = RoundPosition.Closing,
-            npcState = "ready",
-            contextTags = new[] { "decision-point", "resolution", "high-clarity" },
-            preferredAction = PlayerActionType.Commit,
-            outcomes = new[]
-            {
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Commit,
-                    quality = ActionOutcomeQuality.Best,
-                    npcResponse = "The player commits at the right moment and the interaction reaches a clear resolution.",
-                    nextNpcState = "resolved",
-                    influenceChange = 6
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Support,
-                    quality = ActionOutcomeQuality.Acceptable,
-                    npcResponse = "The NPC remains stable, but the interaction still needs a concrete next step.",
-                    nextNpcState = "ready",
-                    influenceChange = 1
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Probe,
-                    quality = ActionOutcomeQuality.Bad,
-                    npcResponse = "The player keeps asking questions even though the issue is already clear.",
-                    nextNpcState = "impatient",
-                    influenceChange = -1
-                },
-                new ActionOutcome
-                {
-                    action = PlayerActionType.Challenge,
-                    quality = ActionOutcomeQuality.Bad,
-                    npcResponse = "The player creates unnecessary friction at a point where resolution was possible.",
-                    nextNpcState = "defensive",
-                    influenceChange = -2
-                }
-            }
-        };
+        roundPool = DefaultRoundLibrary.GetDefaultRoundPool();
     }
 
     private bool HasValidRounds(RoundData[] candidateRounds)
@@ -617,7 +143,29 @@ public class GameManager : MonoBehaviour
 
     private void BuildSessionFromRoundPool()
     {
-        sessionRounds = SessionBuilder.BuildBalancedSession(roundPool, sessionRoundCount);
+        RoundData[] poolForThisSession = roundPool;
+
+        bool isCounterbalanced = GameFlowManager.Instance != null
+            && GameFlowManager.Instance.IsCounterbalancedFlow;
+
+        if (isCounterbalanced)
+        {
+            RoundSubsetGroup targetSubset = GameFlowManager.Instance.CurrentBlockSubsetGroup;
+
+            poolForThisSession = System.Array.FindAll(
+                roundPool,
+                round => round != null && round.subsetGroup == targetSubset
+            );
+
+            sessionRoundCount = poolForThisSession.Length;
+
+            Debug.Log(
+                $"Counterbalanced flow: Block {GameFlowManager.Instance.CurrentBlockIndex} | " +
+                $"Mode={currentAIMode} | Subset={targetSubset} | {poolForThisSession.Length} rounds available."
+            );
+        }
+
+        sessionRounds = SessionBuilder.BuildBalancedSession(poolForThisSession, sessionRoundCount);
 
         if (sessionRounds == null || sessionRounds.Length == 0)
         {
@@ -647,7 +195,7 @@ public class GameManager : MonoBehaviour
         );
         if (feedbackText != null)
         {
-            feedbackText.text = "Choose an action.";
+            feedbackText.text = "Επίλεξε την επόμενη κίνησή σου.";
         }
 
         isProcessingAction = false;
@@ -729,26 +277,12 @@ public class GameManager : MonoBehaviour
             ? selectedOutcome.influenceChange
             : GetInfluenceChange(selectedAction, isCorrectAction);
 
-        int finalInfluenceChange = baseInfluenceChange;
         string playerFeedback;
         string aiEvaluationDetails;
 
-        currentPhase = GamePhase.Action;
-        if (feedbackText != null)
-        {
-            feedbackText.text =
-    $"Player selected: {GetActionDisplayName(selectedAction)}";
-        }
-        UpdateUI();
-
-        gameLogger?.Log(
-            $"ROUND {GetDisplayRoundNumber()} | Action Selected: {selectedAction} | Mode: {currentAIMode}"
-        );
-
-        yield return new WaitForSeconds(actionPhaseDuration);
-
-        currentPhase = GamePhase.Evaluation;
-
+        // Το AI evaluation είναι συγχρονισμένο (δεν χρειάζεται δικό του wait) --
+        // το τρέχουμε αμέσως ώστε να ξέρουμε το τελικό influence change και
+        // να το δείξουμε στο Authority Toast ΠΡΩΤΟ απ' όλα.
         AIEvaluationResult aiResult = aiManager.EvaluateAction(
             currentAIMode,
             GetDisplayRoundNumber(),
@@ -759,30 +293,90 @@ public class GameManager : MonoBehaviour
             reactionTime
         );
 
-        currentNpcMessage = selectedOutcome != null
-            ? selectedOutcome.npcResponse
-            : "The NPC reacts to the selected action.";
-        if (selectedOutcome != null)
-        {
-            npcAnimationController?.PlayState(
-                selectedOutcome.nextNpcState
-            );
-        }
+        // Κρατάμε τα τεχνικά AI details μόνο για logging / dataset.
+        aiEvaluationDetails = aiResult.responseText;
 
-        playerFeedback = BuildPlayerFeedback(
+        int finalInfluenceChange = aiResult.influenceChange;
+        influenceScore = Mathf.Clamp(influenceScore + finalInfluenceChange, 0, 100);
+
+        currentAuthorityMessage = GameTextBuilder.GetAuthorityMessage(
+            selectedOutcome,
+            isCorrectAction
+        );
+
+        currentInfluenceChangeMessage =
+            GameTextBuilder.GetInfluenceChangeMessage(finalInfluenceChange);
+
+        ActionOutcomeQuality resolvedQuality = selectedOutcome != null
+            ? selectedOutcome.quality
+            : (isCorrectAction ? ActionOutcomeQuality.Best : ActionOutcomeQuality.Bad);
+
+        // ΒΗΜΑ 1: ΠΡΩΤΑ εμφανίζεται το Authority Toast Panel (κρίση/βαθμολογία),
+        // αμέσως μετά την επιλογή του παίκτη.
+        currentPhase = GamePhase.Resolution;
+        authorityToastUI?.Show(resolvedQuality, currentAuthorityMessage, finalInfluenceChange);
+        UpdateUI();
+
+        gameLogger?.Log(
+            $"ROUND {GetDisplayRoundNumber()} | Resolution | Influence Change: {finalInfluenceChange} | Influence Total: {influenceScore}"
+        );
+
+        yield return new WaitForSeconds(resolutionPhaseDuration);
+        authorityToastUI?.Hide();
+
+        // ΒΗΜΑ 2: ΜΕΤΑ εμφανίζεται το "Ο παίκτης επέλεξε..." κείμενο.
+        currentPhase = GamePhase.Action;
+        if (feedbackText != null)
+        {
+            feedbackText.text =
+    $"Ο παίκτης επέλεξε: {GameTextBuilder.GetActionDisplayName(selectedAction)}";
+        }
+        UpdateUI();
+
+        gameLogger?.Log(
+            $"ROUND {GetDisplayRoundNumber()} | Action Selected: {selectedAction} | Mode: {currentAIMode}"
+        );
+
+        yield return new WaitForSeconds(actionPhaseDuration);
+
+        // ΒΗΜΑ 3: Feedback text -- η ατάκα του NPC ΔΕΝ αλλάζει ακόμα, ώστε
+        // ο παίκτης να προλαβαίνει να το διαβάσει.
+        currentPhase = GamePhase.Evaluation;
+
+        playerFeedback = GameTextBuilder.BuildPlayerFeedback(
             selectedAction,
             selectedOutcome,
             isCorrectAction
         );
 
-        // Κρατάμε τα τεχνικά AI details μόνο για logging / dataset.
-        aiEvaluationDetails = aiResult.responseText;
-
-        finalInfluenceChange = aiResult.influenceChange;
-
         if (feedbackText != null)
         {
             feedbackText.text = playerFeedback;
+        }
+
+        UpdateUI();
+
+        // Delay πριν αλλάξει η ατάκα/κατάσταση του NPC.
+        yield return new WaitForSeconds(feedbackToNpcSpeechDelay);
+
+        // ΒΗΜΑ 4: ΤΕΛΟΣ αλλάζει η ατάκα και η κατάσταση/animation του NPC.
+        //
+        // Σε Adaptive mode, αν το AI έχει βρει ένα αρκετά σίγουρο matched case
+        // (βλ. AdaptiveAI.GetAdaptiveNpcLine / dialogueOverrideThreshold), ο
+        // παίκτης βλέπει τη δική του, ξεχωριστή ατάκα -- διαφορετική από αυτή
+        // που θα έβλεπε στο Static mode για το ίδιο outcome. Αν δεν υπάρχει
+        // αρκετά καλό match (ή το mode είναι Static), γίνεται fallback στο
+        // κοινό RoundData.outcomes[].npcResponse, όπως πριν.
+        currentNpcMessage = !string.IsNullOrEmpty(aiResult.adaptiveNpcLine)
+            ? aiResult.adaptiveNpcLine
+            : (selectedOutcome != null
+                ? selectedOutcome.npcResponse
+                : "The NPC reacts to the selected action.");
+        if (selectedOutcome != null)
+        {
+            npcAnimationController?.PlayState(
+                selectedOutcome.nextNpcState
+            );
         }
 
         UpdateUI();
@@ -803,29 +397,12 @@ public class GameManager : MonoBehaviour
         gameLogger?.Log(
             $"TRACKER | ReactionTime={reactionTime:F2}s | {behaviourTracker?.GetSummary()}"
         );
-
-        influenceScore = Mathf.Clamp(influenceScore + finalInfluenceChange, 0, 100);
-
-        currentPhase = GamePhase.Resolution;
-
-        currentAuthorityMessage = GetAuthorityMessage(
-            selectedOutcome,
-            isCorrectAction
-        );
-
-        currentInfluenceChangeMessage =
-            GetInfluenceChangeMessage(finalInfluenceChange);
-
-        ActionOutcomeQuality resolvedQuality = selectedOutcome != null
-            ? selectedOutcome.quality
-            : (isCorrectAction ? ActionOutcomeQuality.Best : ActionOutcomeQuality.Bad);
-
-        authorityToastUI?.Show(resolvedQuality, currentAuthorityMessage, finalInfluenceChange);
-        UpdateUI();
-
-        gameLogger?.Log(
-            $"ROUND {GetDisplayRoundNumber()} | Resolution | Influence Change: {finalInfluenceChange} | Influence Total: {influenceScore}"
-        );
+        // Ενημερώνει τη session memory ΜΟΝΟ στο Adaptive mode, ώστε το επόμενο
+        // round να μπορεί να ανιχνεύσει αν τα δικά του contextTags έχουν ήδη
+        // "λυθεί" καλά. Μπαίνει εδώ (μετά το EvaluateAction/RegisterAction του
+        // ΤΡΕΧΟΝΤΟΣ γύρου, πριν ξεκινήσει ο επόμενος), ώστε να μην επηρεάζεται ο
+        // εαυτός του και να επηρεάζεται σωστά μόνο ο επόμενος γύρος.
+        aiManager.MarkResolvedIfAdaptive(currentAIMode, currentRound, selectedOutcome?.quality);
 
         gameLogger?.LogRoundResult(
             GetDisplayRoundNumber(),
@@ -848,18 +425,32 @@ public class GameManager : MonoBehaviour
             aiResult.matchScore,
             aiResult.adaptiveReason,
             aiResult.behaviourLabel,
+            aiResult.wasAlreadyResolved,
+            aiResult.ambiguityGap,
+            aiResult.secondCaseId,
             behaviourTracker,
             currentRound.caseType.ToString(),
             currentRound.difficulty.ToString(),
             currentRound.commitTiming.ToString(),
-            currentRound.roundPosition.ToString()
+            currentRound.roundPosition.ToString(),
+            GameFlowManager.Instance != null ? GameFlowManager.Instance.ConditionGroupIndex : -1,
+            GameFlowManager.Instance != null && GameFlowManager.Instance.IsCounterbalancedFlow
+                ? GameFlowManager.Instance.CurrentBlockIndex
+                : -1,
+            currentRound.subsetGroup.ToString()
         );
 
-        yield return new WaitForSeconds(resolutionPhaseDuration);
-        authorityToastUI?.Hide();
         currentRoundIndex++;
+        AdaptiveDifficultyReorderer.ReorderRemaining(
+            currentAIMode,
+            behaviourTracker,
+            sessionRounds,
+            currentRoundIndex,
+            gameLogger
+        );
         StartRound();
     }
+
 
     private int GetInfluenceChange(PlayerActionType selectedAction, bool isCorrectAction)
     {
@@ -895,171 +486,117 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private string BuildPlayerFeedback(
-        PlayerActionType selectedAction,
-        ActionOutcome selectedOutcome,
-        bool isCorrectAction)
-    {
-        string actionName = GetActionDisplayName(selectedAction);
-
-        if (selectedOutcome == null)
-        {
-            return isCorrectAction
-                ? $"{actionName} was appropriate for this situation."
-                : $"{actionName} did not match the needs of this situation.";
-        }
-
-        switch (selectedOutcome.quality)
-        {
-            case ActionOutcomeQuality.Best:
-                return $"{actionName} was the strongest choice for this situation.";
-
-            case ActionOutcomeQuality.Acceptable:
-                return $"{actionName} was a reasonable choice, but another approach could have addressed the situation more directly.";
-
-            case ActionOutcomeQuality.Bad:
-                return $"{actionName} did not fit the situation well and reduced the effectiveness of the interaction.";
-
-            case ActionOutcomeQuality.VeryBad:
-                return $"{actionName} worked against the needs of the situation and made the interaction more difficult.";
-
-            default:
-                return isCorrectAction
-                    ? $"{actionName} matched the needs of the situation."
-                    : $"{actionName} did not match the needs of the situation.";
-        }
-    }
-
-    private string GetActionDisplayName(PlayerActionType action)
-    {
-        switch (action)
-        {
-            case PlayerActionType.Probe:
-                return "Clarify";
-
-            case PlayerActionType.Challenge:
-                return "Confront";
-
-            case PlayerActionType.Support:
-                return "Stabilize";
-
-            case PlayerActionType.Commit:
-                return "Push Forward";
-
-            default:
-                return action.ToString();
-        }
-    }
-    private string GetAuthorityMessage(
-        ActionOutcome selectedOutcome,
-        bool isCorrectAction)
-    {
-        if (selectedOutcome == null)
-        {
-            return isCorrectAction
-                ? "Correct choice"
-                : "Incorrect choice";
-        }
-
-        switch (selectedOutcome.quality)
-        {
-            case ActionOutcomeQuality.Best:
-                return "Correct choice";
-
-            case ActionOutcomeQuality.Acceptable:
-                return "Acceptable choice";
-
-            case ActionOutcomeQuality.Bad:
-                return "Poor choice";
-
-            case ActionOutcomeQuality.VeryBad:
-                return "Critical mistake";
-
-            default:
-                return isCorrectAction
-                    ? "Correct choice"
-                    : "Incorrect choice";
-        }
-    }
-
-    private string GetInfluenceChangeMessage(int influenceChange)
-    {
-        string formattedChange = influenceChange >= 0
-            ? $"+{influenceChange}"
-            : influenceChange.ToString();
-
-        return $"Influence {formattedChange}";
-    }
 
     private void EndPrototype()
     {
         currentPhase = GamePhase.Resolution;
 
-        string finalNpcMessage = "Prototype complete. All rounds finished.";
-        if (authorityToastPanel != null)
-        {
-            authorityToastPanel.SetActive(true);
-        }
+        string finalNpcMessage = "Το πρωτότυπο ολοκληρώθηκε. Όλοι οι γύροι τελείωσαν.";
         if (npcSpeechText != null)
             npcSpeechText.text = finalNpcMessage;
 
-        if (authorityMessageText != null)
-        {
-            authorityMessageText.text = "Session complete";
-        }
-
-        if (influenceChangeText != null)
-        {
-            influenceChangeText.text =
-                $"Final Influence: {influenceScore}";
-        }
-
         if (feedbackText != null)
         {
-            feedbackText.text = "Loading results...";
+            feedbackText.text = "Φόρτωση αποτελεσμάτων...";
         }
 
         if (roundText != null)
         {
             roundText.text =
-                $"Round: {sessionRounds.Length}/{sessionRounds.Length}";
+                $"Γύρος: {sessionRounds.Length}/{sessionRounds.Length}";
         }
 
         if (influenceText != null)
         {
-            influenceText.text = $"Influence: {influenceScore}";
+            influenceText.text = $"Επιρροή: {influenceScore}";
         }
 
         gameLogger?.Log($"END PROTOTYPE | Final Influence: {influenceScore}");
 
+        bool isCounterbalanced = GameFlowManager.Instance != null
+            && GameFlowManager.Instance.IsCounterbalancedFlow;
+
         if (GameFlowManager.Instance != null && behaviourTracker != null)
         {
-            GameFlowManager.Instance.StoreSessionResults(
-                influenceScore,
-                behaviourTracker.correctActions,
-                behaviourTracker.wrongActions,
-                behaviourTracker.GetSuccessRate(),
-                behaviourTracker.averageReactionTime,
-                behaviourTracker.riskSuccessRate,
-                behaviourTracker.actionVarietyScore,
-                behaviourTracker.commitCount
-            );
+            if (isCounterbalanced)
+            {
+                GameFlowManager.Instance.StoreBlockResults(
+                    GameFlowManager.Instance.CurrentBlockIndex,
+                    currentAIMode,
+                    GameFlowManager.Instance.CurrentBlockSubsetGroup,
+                    influenceScore,
+                    behaviourTracker.correctActions,
+                    behaviourTracker.wrongActions,
+                    behaviourTracker.GetSuccessRate(),
+                    behaviourTracker.averageReactionTime,
+                    behaviourTracker.riskSuccessRate,
+                    behaviourTracker.actionVarietyScore,
+                    behaviourTracker.commitCount
+                );
+            }
+            else
+            {
+                GameFlowManager.Instance.StoreSessionResults(
+                    influenceScore,
+                    behaviourTracker.correctActions,
+                    behaviourTracker.wrongActions,
+                    behaviourTracker.GetSuccessRate(),
+                    behaviourTracker.averageReactionTime,
+                    behaviourTracker.riskSuccessRate,
+                    behaviourTracker.actionVarietyScore,
+                    behaviourTracker.commitCount
+                );
+            }
 
             if (gameLogger != null)
             {
                 string datasetPath = gameLogger.ExportSessionDataset();
                 GameFlowManager.Instance.StoreDatasetPath(datasetPath);
 
-                string summaryPath = gameLogger.ExportSessionSummary(
-                    currentAIMode.ToString(),
-                    influenceScore,
-                    behaviourTracker
-                );
+                string summaryPath = isCounterbalanced
+                    ? gameLogger.ExportSessionSummary(
+                        currentAIMode.ToString(),
+                        influenceScore,
+                        behaviourTracker,
+                        GameFlowManager.Instance.ConditionGroupIndex,
+                        GameFlowManager.Instance.CurrentBlockIndex,
+                        GameFlowManager.Instance.CurrentBlockSubsetGroup.ToString()
+                    )
+                    : gameLogger.ExportSessionSummary(
+                        currentAIMode.ToString(),
+                        influenceScore,
+                        behaviourTracker
+                    );
+
                 GameFlowManager.Instance.StoreSummaryPath(summaryPath);
             }
         }
 
-        Invoke(nameof(GoToResultsScene), 2f);
+        if (isCounterbalanced)
+        {
+            // Το behaviourTracker ΔΕΝ πρέπει να "κουβαλάει" στατιστικά από
+            // το Block 1 μέσα στο Block 2 -- κάθε block μετριέται ανεξάρτητα.
+            // (Το behaviourTracker είναι scene-local, οπότε έτσι κι αλλιώς
+            // δημιουργείται νέο σε κάθε reload του OfficeSession· αυτό εδώ
+            // είναι απλά τεκμηρίωση της πρόθεσης.)
+            Invoke(nameof(AdvanceToNextBlockOrResults), 2f);
+        }
+        else
+        {
+            Invoke(nameof(GoToResultsScene), 2f);
+        }
+    }
+
+    private void AdvanceToNextBlockOrResults()
+    {
+        if (GameFlowManager.Instance != null)
+        {
+            GameFlowManager.Instance.OnBlockCompleted();
+        }
+        else
+        {
+            Debug.LogWarning("GameFlowManager not found. Cannot advance to next block.");
+        }
     }
 
     private void GoToResultsScene()
@@ -1083,7 +620,7 @@ public class GameManager : MonoBehaviour
     {
         if (phaseText != null)
         {
-            phaseText.text = $"Phase: {currentPhase} | Mode: {currentAIMode}";
+            phaseText.text = $"Φάση: {currentPhase} | Λειτουργία: {currentAIMode}";
         }
 
         if (npcSpeechText != null)
@@ -1094,12 +631,12 @@ public class GameManager : MonoBehaviour
         if (roundText != null)
         {
             roundText.text =
-                $"Round: {GetDisplayRoundNumber()}/{sessionRounds.Length}";
+                $"Γύρος: {GetDisplayRoundNumber()}/{sessionRounds.Length}";
         }
 
         if (influenceText != null)
         {
-            influenceText.text = $"Influence: {influenceScore}";
+            influenceText.text = $"Επιρροή: {influenceScore}";
         }
     }
 }

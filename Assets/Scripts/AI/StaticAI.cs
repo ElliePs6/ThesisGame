@@ -52,6 +52,18 @@ public class StaticAI : MonoBehaviour
             case 10:
                 return GetRound10Response(action, isCorrectAction);
 
+            case 11:
+                return GetRound11Response(action, isCorrectAction);
+
+            case 12:
+                return GetRound12Response(action, isCorrectAction);
+
+            case 13:
+                return GetRound13Response(action, isCorrectAction);
+
+            case 14:
+                return GetRound14Response(action, isCorrectAction);
+
             default:
                 return "Static AI: No scripted response available for this round.";
         }
@@ -255,6 +267,86 @@ public class StaticAI : MonoBehaviour
                 return "Static AI: The confrontation creates unnecessary friction near resolution.";
             default:
                 return "Static AI: The interaction does not reach a clear resolution.";
+        }
+    }
+
+    private string GetRound11Response(PlayerActionType action, bool isCorrectAction)
+    {
+        if (isCorrectAction)
+        {
+            return "Static AI: The Primary NPC acknowledges the small inconsistency and clarifies it right away.";
+        }
+
+        switch (action)
+        {
+            case PlayerActionType.Probe:
+                return "Static AI: The Primary NPC adds more detail, but the minor contradiction remains unaddressed.";
+            case PlayerActionType.Support:
+                return "Static AI: The Primary NPC stays comfortable, but the contradiction goes unnoticed.";
+            case PlayerActionType.Commit:
+                return "Static AI: The player moves forward while ignoring the contradiction entirely.";
+            default:
+                return "Static AI: The minor inconsistency remains unresolved.";
+        }
+    }
+
+    private string GetRound12Response(PlayerActionType action, bool isCorrectAction)
+    {
+        if (isCorrectAction)
+        {
+            return "Static AI: After persistent but careful questioning, the Primary NPC finally reveals a useful detail.";
+        }
+
+        switch (action)
+        {
+            case PlayerActionType.Support:
+                return "Static AI: The Primary NPC relaxes slightly, but still avoids the details.";
+            case PlayerActionType.Challenge:
+                return "Static AI: Direct pressure makes the Primary NPC even more closed off.";
+            case PlayerActionType.Commit:
+                return "Static AI: The player moves forward with no real information, leaving major gaps.";
+            default:
+                return "Static AI: The Primary NPC continues to withhold information.";
+        }
+    }
+
+    private string GetRound13Response(PlayerActionType action, bool isCorrectAction)
+    {
+        if (isCorrectAction)
+        {
+            return "Static AI: The Primary NPC easily gives a more specific answer.";
+        }
+
+        switch (action)
+        {
+            case PlayerActionType.Support:
+                return "Static AI: The Primary NPC feels comfortable, but the answer stays general.";
+            case PlayerActionType.Challenge:
+                return "Static AI: The pressure is unnecessary at this low-stakes point and causes mild friction.";
+            case PlayerActionType.Commit:
+                return "Static AI: The player moves forward without requesting any clarification.";
+            default:
+                return "Static AI: The general answer remains unclarified.";
+        }
+    }
+
+    private string GetRound14Response(PlayerActionType action, bool isCorrectAction)
+    {
+        if (isCorrectAction)
+        {
+            return "Static AI: The Primary NPC relaxes quickly and the tension eases.";
+        }
+
+        switch (action)
+        {
+            case PlayerActionType.Probe:
+                return "Static AI: The Primary NPC answers carefully, and the tension stays low.";
+            case PlayerActionType.Challenge:
+                return "Static AI: The pressure slightly increases the Primary NPC's defensiveness.";
+            case PlayerActionType.Commit:
+                return "Static AI: The player moves forward before the tension has eased at all.";
+            default:
+                return "Static AI: The tension remains unresolved.";
         }
     }
 }

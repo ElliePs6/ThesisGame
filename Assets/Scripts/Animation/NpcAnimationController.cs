@@ -61,6 +61,7 @@ public class NpcAnimationController : MonoBehaviour
             case "reflective":
             case "confident-but-uncertain":
             case "cooperative-but-incomplete":
+            case "stagnant":
                 npcAnimator.SetTrigger(UncertainTrigger);
                 break;
 
@@ -73,6 +74,7 @@ public class NpcAnimationController : MonoBehaviour
             case "cooperative":
             case "ready":
             case "resolved":
+            case "sharing-insight":
                 npcAnimator.SetTrigger(CooperativeTrigger);
                 break;
 

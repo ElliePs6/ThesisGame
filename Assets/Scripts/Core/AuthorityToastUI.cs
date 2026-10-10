@@ -39,7 +39,7 @@ public class AuthorityToastUI : MonoBehaviour
                 ? $"+{influenceChange}"
                 : influenceChange.ToString();
 
-            influenceChangeText.text = $"Influence {formattedChange}";
+            influenceChangeText.text = $"Επιρροή {formattedChange}";
         }
 
         ShowIconForQuality(quality);

@@ -13,7 +13,7 @@ public class MainMenuUI : MonoBehaviour
             : "Anonymous";
 
         GameFlowManager.Instance.SetParticipant(username);
-        GameFlowManager.Instance.GoToModeSelection();
+        GameFlowManager.Instance.StartFirstBlock();
     }
 
     public void OnResultsClicked()

@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_SkyboxMaterial: {fileID: 0}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -353,6 +353,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 629f527ecd28be6438cdcb8ea8016583, type: 3}
+--- !u!1 &240938412 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7683446754374943262, guid: 629f527ecd28be6438cdcb8ea8016583, type: 3}
+  m_PrefabInstance: {fileID: 240938411}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &257799035
 GameObject:
   m_ObjectHideFlags: 0
@@ -382,7 +387,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a409d8c7405d734c8c3b364e225e7b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  xrSystemsPrefab: {fileID: 0}
+  xrSystemsPrefab: {fileID: 240938412}
   fadeDuration: 0.35
 --- !u!4 &257799037
 Transform:
